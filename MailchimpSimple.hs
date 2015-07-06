@@ -15,7 +15,7 @@ import           Network.HTTP.Types ( methodPost, Status(..), http11 )
 import           Control.Monad.IO.Class ( liftIO )
 import           Control.Exception as E ( catch )
 
-_API_KEY = "0203e88d8616efc6715992e57e29f3db-us11"
+_API_KEY = "sample_apikey-datacenter"
 
 addSubscriber    = getActivities "lists" "subscribe"
 listSubscribers  = getActivities "lists" "members"
