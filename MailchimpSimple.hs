@@ -33,6 +33,7 @@ getHistory       = getActivities "lists" "activity"
 -- | Reading the JSON file from the local machine
 getJSON jsonFile = catch (BL.readFile jsonFile)
                     (\e -> do let ex = show (e :: IOException)
+                              L.writeLog ERROR "getJSON" ("Error reading= " ++ jsonFile) ("IOException= " ++ ex) 
                               return BL.empty)
 
 -- | Construct the end-point URL
@@ -59,6 +60,7 @@ getActivities section method = do
   
 -- | Construct the erroneous HTTP responses when an exception occurs
 getResponse s h c = do
+  L.writeLog ERROR "getActivities" "" "EXIT Fail"
   url <- endPointUrl
   initReq <- parseUrl url
   let req = initReq { method = methodPost }
