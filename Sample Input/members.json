@@ -1,4 +1,15 @@
 {
     "apikey": "sample_apikey",
-    "id": "sample_listid"
+    "id": "sample_listid",
+    "status": "subscribed",
+    "opts": {
+        "start": 0,
+        "limit": 25,
+        "sort_field": "",
+        "sort_dir": "DESC",
+        "segment": {
+            "saved_segment_id": "sample_segementid",
+			"name": "Pioneers"
+        }
+    }
 }

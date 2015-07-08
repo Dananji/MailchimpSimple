@@ -1,8 +1,4 @@
 {
     "apikey": "sample_apikey",
-    "list_name": "RCON Embla",
-    "start": 0,
-    "limit": 1,
-    "sort_field": "web",
-    "sort_dir": "DESC"
+    "id": "sample_listid"
 }

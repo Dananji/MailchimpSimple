@@ -1,7 +1,7 @@
 {
     "apikey": "sample_apikey",
     "id": "sample_listid",
-    "email": { "email": "dananjil@embla.asia" },
+    "email": { "email": "sample_email" },
     "email_type": "html",
     "double_optin": true,
     "update_existing": true,
