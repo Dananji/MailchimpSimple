@@ -24,6 +24,7 @@ import           Types
 _API_KEY = "sample_apikey"
 _LIST_ID = "sample_listid"
 
+-- | Add new subscriber
 addSubscriber email emailType = do
   url <- endPointUrl
   let subscription = Subscription { s_apikey     = _API_KEY
@@ -36,10 +37,11 @@ addSubscriber email emailType = do
                                   , s_send       = True }
   let sUrl = url ++ "/lists/subscribe.json"
   processResponse sUrl subscription
-  
+
+-- | Add a batch of subscribers
 batchSubscribe fileName = do
   url <- endPointUrl
-  emails <- constructBatchd fileName
+  emails <- constructBatch fileName
   let batchSubscription = BatchSubscription { b_apikey  = _API_KEY
                                             , b_id      = _LIST_ID
                                             , b_batch   = emails
@@ -50,6 +52,7 @@ batchSubscribe fileName = do
   let bUrl = url ++ "lists/batch-subscribe.json"
   processResponse bUrl batchSubscription
   
+-- | List mailing lists in a particular account
 listMailingLists = do
   url <- endPointUrl
   let mList =   List { l_apikey     = _API_KEY
@@ -62,6 +65,7 @@ listMailingLists = do
   let lUrl = url ++ "/lists/list.json"
   processResponse lUrl mList
 
+-- | List subscribers in a mailing list
 listSubscribers = do
   url <- endPointUrl
   let sList = Subscribers { su_apikey = _API_KEY
@@ -70,6 +74,7 @@ listSubscribers = do
   let lUrl = url ++ "/lists/members.json"
   processResponse lUrl sList
 	
+-- | Get the activity history on an account
 getActivity = do
   url <- endPointUrl
   let activity = Activity { a_apikey = _API_KEY
@@ -77,6 +82,7 @@ getActivity = do
   let aUrl = url ++ "/lists/activity.json"
   processResponse aUrl activity
   
+-- | Get the created campaigns
 getCampaigns = do
   url <- endPointUrl
   let campaigns = Campaign { c_apikey     = _API_KEY
@@ -87,6 +93,7 @@ getCampaigns = do
   let aUrl = url ++ "/campaigns/list.json"
   processResponse aUrl campaigns
   
+-- | Build the response from URL and JSON data
 processResponse url jsonData = do
   initReq <- liftIO $ parseUrl url
   let req = initReq { requestBody = RequestBodyLBS $ encode jsonData
@@ -106,10 +113,20 @@ getResponse s h c = do
                      , responseHeaders     = h
                      , responseCookieJar   =  c }
   return errorRes
+
+-- | Construction of array of Batch data read from an external text file
+constructBatch :: FilePath -> IO [Batch]
+constructBatch fileName = do
+  input <- readFile fileName
+  let emails = splitString ',' input
+  let emailArry = [ Batch { b_email = (Email x), b_email_type = "html"} | x <- emails]
+  return emailArry
   
+-- | Construct the end-point URL
 endPointUrl :: IO String
 endPointUrl = return ("https://" ++ (last (splitString '-' _API_KEY)) ++ ".api.mailchimp.com/2.0/")
 
+-- | Utility function to split strings  
 splitString :: Char -> String -> [String]
 splitString d [] = []
 splitString d s = x : splitString d (drop 1 y) where (x,y) = span (/= d) s
@@ -117,9 +134,3 @@ splitString d s = x : splitString d (drop 1 y) where (x,y) = span (/= d) s
 -- | Utility function to convert Lazy.ByteString to Strict ByteString
 convertToStrict :: BL.ByteString -> B.ByteString
 convertToStrict = B.concat . BL.toChunks
-
-constructBatchd fileName = do
-  input <- readFile fileName
-  let emails = splitString ',' input
-  let emailArry = [ Batch { b_email = (Email x), b_email_type = "html"} | x <- emails]
-  return emailArry
