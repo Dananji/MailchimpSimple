@@ -3,12 +3,13 @@
 module Types ( Subscription(..)
              , EmailId(..)
              , Activity(..)
-			 , List(..)
+			 , MailList(..)
              , Filters(..)
 			 , Subscribers(..)
              , BatchSubscription(..)
              , Batch(..)
-             , Campaign(..) ) where
+             , Campaign(..)
+             , SendMail(..) ) where
 
 import           Data.Aeson
 import           GHC.Generics hiding ( head )
@@ -100,23 +101,23 @@ instance ToJSON Activity where
   toJSON (Activity a_apikey a_id) = object ["apikey" .= a_apikey
                                           , "id" .= a_id ]
 
-data List =
-  List { l_apikey :: String
-       , l_filters :: Filters
-	   , l_start :: Int 
-	   , l_limit :: Int
-	   , l_sort_field :: String
-	   , l_sort_dir :: String
-	   } deriving (Show, Generic)
+data MailList =
+  MailList { l_apikey :: String
+           , l_filters :: Filters
+	       , l_start :: Int 
+	       , l_limit :: Int
+	       , l_sort_field :: String
+	       , l_sort_dir :: String
+	       } deriving (Show, Generic)
 
-instance FromJSON List where
-instance ToJSON List where
-  toJSON (List l_apikey l_filters l_start l_limit l_sort_field l_sort_dir) = object [ "apikey"     .= l_apikey
-                                                                                    , "filters"  .= l_filters
-                                                                                    , "start"      .= l_start
-                                                                                    , "limit"      .= l_limit
-                                                                                    , "sort_field" .= l_sort_field
-                                                                                    , "sort_dir"   .= l_sort_dir ]
+instance FromJSON MailList where
+instance ToJSON MailList where
+  toJSON (MailList l_apikey l_filters l_start l_limit l_sort_field l_sort_dir) = object [ "apikey"     .= l_apikey
+                                                                                        , "filters"  .= l_filters
+                                                                                        , "start"      .= l_start
+                                                                                        , "limit"      .= l_limit
+                                                                                        , "sort_field" .= l_sort_field
+                                                                                        , "sort_dir"   .= l_sort_dir ]
                                                                                       
 data Filters =
   Filters { list_id :: String
@@ -139,71 +140,23 @@ instance ToJSON Subscribers where
                                                           , "status" .= su_status]
                                                           
 data Campaign =
-  Campaign { c_apikey :: String
-           , c_start :: Int
-           , c_limit :: Int
-           , c_sort_field :: String
-           , c_sort_dir :: String
+  Campaign { cid :: String
+           , title :: String
            } deriving (Show, Generic)
            
 instance FromJSON Campaign where
 instance ToJSON Campaign where
-  toJSON (Campaign c_apikey c_start c_limit c_sort_field c_sort_dir) = object [ "apikey"     .= c_apikey
-                                                                              , "start"      .= c_start
-                                                                              , "limit"      .= c_limit
-                                                                              , "sort_field" .= c_sort_field
-                                                                              , "sort_dir"   .= c_sort_dir ]
                                                                               
--- data CampaignResponse =
-  -- CampaignResponse { total :: Int
-                   -- , c_data :: [CData]
-                   -- , c_errors :: [CErrors]
-                   -- } deriving (Show, Generic)
-                   
--- instance FromJSON CampaignResponse where
-  -- parseJSON (Object v) = do
-    -- cTotal  <- v .: "total"
-    -- cData   <- v .: "data"
-    -- cErrors <- v .: "errors"
-    -- return $ CampaignResponse cTotal cData cErrors
-  -- parseJSON _ = mzero
-  
--- instance ToJSON CampaignResponse where
-  -- toJSON (CampaignResponse total, c_data, c_errors) = object [ "total"  .= total
-                                                             -- , "data"   .= c_data
-                                                             -- , "errors" .= c_errors ]
-                                                             
--- data CData =
-  -- CData { c_id :: String
-        -- , c_web_id :: Int
-        -- , c_list_id :: String
-        -- , c_folder_id :: String
-        -- , c_template_id :: String
-        -- , c_content_type :: String
-        -- , c_title :: String
-        -- , c_type :: String
-        -- , c_create_time :: String
-        -- , c_send_time :: String
-        -- , c_emails_sent :: Int
-        -- , c_status :: String
-        -- , c_from_name :: String
-        -- , c_from_email :: String
-        -- , c_subject :: String
-        -- , c_to_name :: String
-        -- , c_archive_url :: String
-        -- , c_inline_css :: Bool
-        -- , c_analytics :: String
-        -- , c_analytics_tag :: String
-        -- , c_authenticate :: Bool
-        -- , c_ecomm360 :: Bool
-        -- , c_auto_tweet :: Bool
-        -- , c_auto_fb_post :: String
-        -- , c_auto_footer :: Bool
-        -- , c_timewrap :: Bool
-        -- , c_timewrap_schedule :: String
-        -- , c_parent_id :: String
-        -- , c_is_child :: Bool
-        -- , c_tests_sent :: String
-        -- , c_tests_remain :: Int
-        -- , c_tracking :: Tracking
-        -- }
+data SendMail =
+  SendMail { m_apikey :: String
+           , m_cid :: String
+           , m_test_emails :: [String]
+           , m_send_type :: String
+           } deriving (Show, Generic)
+           
+instance FromJSON SendMail where
+instance ToJSON SendMail where
+  toJSON (SendMail m_apikey m_cid m_test_emails m_send_type) = object [ "apikey"      .= m_apikey
+                                                                      , "cid"         .= m_cid
+                                                                      , "test_emails" .= m_test_emails
+                                                                      , "send_type"   .= m_send_type ]

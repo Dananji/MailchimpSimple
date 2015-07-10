@@ -17,6 +17,7 @@ import           Network.HTTP.Types ( methodPost, Status(..), http11 )
 import           Control.Monad.IO.Class ( liftIO )
 import           Control.Exception ( catch, IOException )
 import           Data.Aeson ( encode, decode )
+import           Data.List
 
 -- App module
 import           Types
@@ -55,13 +56,13 @@ batchSubscribe fileName = do
 -- | List mailing lists in a particular account
 listMailingLists = do
   url <- endPointUrl
-  let mList =   List { l_apikey     = _API_KEY
-                     , l_filters    = Filters { list_id   = ""
-                                              , list_name = "" }
-	                 , l_start      = 0
-	                 , l_limit      = 25
-	                 , l_sort_field = "web"
-	                 , l_sort_dir   = "DESC" }
+  let mList =   MailList { l_apikey     = _API_KEY
+                         , l_filters    = Filters { list_id   = ""
+                                                  , list_name = "" }
+	                     , l_start      = 0
+	                     , l_limit      = 25
+	                     , l_sort_field = "web"
+	                     , l_sort_dir   = "DESC" }
   let lUrl = url ++ "/lists/list.json"
   processResponse lUrl mList
 
@@ -83,15 +84,46 @@ getActivity = do
   processResponse aUrl activity
   
 -- | Get the created campaigns
-getCampaigns = do
+getCampaigns :: FilePath -> IO [Campaign]
+getCampaigns fileName = do
+  list <- readCampaignsCSV fileName
+  let trans = transpose list
+  let h = head trans
+  let t = last trans
+  return [ Campaign { cid = fst tuple, title = snd tuple } | tuple <- (zip h t)]
+  
+-- | Read the CSV file exported from the Campaigns in Mailchimp web interface
+readCampaignsCSV :: FilePath -> IO [[String]]
+readCampaignsCSV fileName = do
+  input <- readFile fileName
+  let values = tail $ lines input
+  let finalVal = getValues $ processValues values
+  return finalVal
+  where processValues [] = [] 
+        processValues (x:xs) = (splitString ',' x) : processValues xs
+        getValues [] = []
+        getValues (x:xs) = (map remove ((last x) : (take 1 x))) : getValues xs
+        remove s = intercalate " " (map (filter (/='"')) (words s))
+  
+sendEmail fileName cid = do
   url <- endPointUrl
-  let campaigns = Campaign { c_apikey     = _API_KEY
-                           , c_start      = 0
-                           , c_limit      = 25
-                           , c_sort_field = ""
-                           , c_sort_dir   = "DESC"}
-  let aUrl = url ++ "/campaigns/list.json"
-  processResponse aUrl campaigns
+  emails <- readSubscribersCSV fileName
+  let mail = SendMail { m_apikey      = _API_KEY
+                      , m_cid         = cid
+                      , m_test_emails = emails
+                      , m_send_type   = "html" }
+  let mUrl = url ++ "campaigns/send-test.json"
+  processResponse mUrl mail                
+       
+-- | Read the CSV exported from Mailchimp web interface        
+readSubscribersCSV :: FilePath -> IO [String]
+readSubscribersCSV fileName = do
+  input <- readFile fileName
+  let values = tail $ lines input
+  let processed = concat $ processValues values
+  return processed
+  where processValues [] = [] 
+        processValues (x:xs) = (take 1 (splitString ',' x)) : processValues xs
   
 -- | Build the response from URL and JSON data
 processResponse url jsonData = do
