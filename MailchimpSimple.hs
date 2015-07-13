@@ -12,24 +12,36 @@ import           Network.HTTP.Conduit ( parseUrl, RequestBody (RequestBodyLBS), 
                                       , HttpException (..), Cookie(..))
 import           Network.HTTP.Types ( methodPost, Status(..), http11 )
 import           Control.Monad.IO.Class ( liftIO )
-import           Control.Exception ( catch, IOException )
+import           Control.Exception ( catch, IOException, Exception )
 import           Data.Aeson ( encode, decode )
 import           Data.List
 import           System.Exit
+import           Data.ConfigFile
+import           Data.Either.Utils
+import           Control.Monad.Error 
 
--- App module
+-- App modules
 import           Types
 import           Logger
 
-_API_KEY = "sample_apikey"
-_LIST_ID = "sample_list_id"
+-- | Read the user specified configuration
+getConfig :: FilePath -> OptionSpec -> IO String
+getConfig fileName valueType = do           
+  val <- readfile emptyCP fileName
+  let cp = forceEither val
+  let keyVals = if (has_section cp "USER")
+                  then forceEither $ items cp "USER"
+                  else forceEither $ items cp "DEFAULT"
+  return $ snd $ head $ filter ((==valueType).fst) keyVals
 
 -- | Add a new subscriber
 addSubscriber email emailType = do
   writeLog INFO "addSubscriber" (email ++ "," ++ emailType) "Entry"
+  apiKey <- getConfig "web.config" "api_key"
+  listID <- getConfig "web.config" "list_id"
   url <- endPointUrl
-  let subscription = Subscription { s_apikey     = _API_KEY
-                                  , s_id         = _LIST_ID
+  let subscription = Subscription { s_apikey     = apiKey
+                                  , s_id         = listID
                                   , s_email      = (Email email)
                                   , s_email_type = emailType
                                   , s_dou_opt    = True 
@@ -42,18 +54,19 @@ addSubscriber email emailType = do
   
 -- | Add a batch of subscribers
 batchSubscribe fileName = do
+  apiKey <- getConfig "web.config" "api_key"
+  listID <- getConfig "web.config" "list_id"
   writeLog INFO "batchSubscribe" fileName "Entry"
   url <- endPointUrl
   emails <- getEmailAddresses fileName
   let emailArry = [ Batch { b_email = (Email x), b_email_type = "html"} | x <- emails]
-  let batchSubscription = BatchSubscription { b_apikey  = _API_KEY
-                                            , b_id      = _LIST_ID
+  let batchSubscription = BatchSubscription { b_apikey  = apiKey
+                                            , b_id      = listID
                                             , b_batch   = emailArry
                                             , b_dou_opt = True
                                             , b_up_ex   = True
-                                            , b_rep_int = True
-                                            }
-  let bUrl = url ++ "lists/batch-subscribe.json"
+                                            , b_rep_int = True }
+  let bUrl = url ++ "/lists/batch-subscribe.json"
   processResponse bUrl batchSubscription
   writeLog INFO "batchSubscribe" (bUrl ++ "," ++ show batchSubscription) "OK"
   where getEmailAddresses fileName = do
@@ -63,9 +76,10 @@ batchSubscribe fileName = do
   
 -- | List mailing lists in a particular account
 listMailingLists = do
-  writeLog INFO "listMailingLists" _API_KEY "Entry"
+  apiKey <- getConfig "web.config" "api_key"
+  writeLog INFO "listMailingLists" apiKey "Entry"
   url <- endPointUrl
-  let mList =   MailList { l_apikey     = _API_KEY
+  let mList =   MailList { l_apikey     = apiKey
                          , l_filters    = Filters { list_id   = ""
                                                   , list_name = "" }
 	                     , l_start      = 0
@@ -78,10 +92,12 @@ listMailingLists = do
 
 -- | List subscribers in a mailing list
 listSubscribers = do
-  writeLog INFO "listSubscribers" (_API_KEY ++ "," ++ _LIST_ID) "Entry"
+  apiKey <- getConfig "web.config" "api_key"
+  listID <- getConfig "web.config" "list_id"
+  writeLog INFO "listSubscribers" (apiKey ++ "," ++ listID) "Entry"
   url <- endPointUrl
-  let sList = Subscribers { su_apikey = _API_KEY
-                          , su_id     = _LIST_ID
+  let sList = Subscribers { su_apikey = apiKey
+                          , su_id     = listID
                           , su_status = "subscribed" }
   let lUrl = url ++ "/lists/members.json"
   processResponse lUrl sList
@@ -89,10 +105,12 @@ listSubscribers = do
 	
 -- | Get the activity history on an account
 getActivity = do
-  writeLog INFO "getActivity" (_API_KEY ++ "," ++ _LIST_ID) "Entry"
+  apiKey <- getConfig "web.config" "api_key"
+  listID <- getConfig "web.config" "list_id"
+  writeLog INFO "getActivity" (apiKey ++ "," ++ listID) "Entry"
   url <- endPointUrl
-  let activity = Activity { a_apikey = _API_KEY
-                          , a_id     = _LIST_ID }
+  let activity = Activity { a_apikey = apiKey
+                          , a_id     = listID }
   let aUrl = url ++ "/lists/activity.json"
   processResponse aUrl activity
   writeLog INFO "getActivity" (aUrl ++ "," ++ show activity) "OK"
@@ -127,13 +145,14 @@ readCampaings fileName = do
 -- | Send an already existing campaign to a list of subscribers 
 sendEmail fileName cid = do
   writeLog INFO "sendEmail" (fileName ++ "," ++ cid) "Entry"
+  apiKey <- getConfig "web.config" "api_key"
   url <- endPointUrl
   emails <- getSubscribers fileName
-  let mail = SendMail { m_apikey      = _API_KEY
+  let mail = SendMail { m_apikey      = apiKey
                       , m_cid         = cid
                       , m_test_emails = emails
                       , m_send_type   = "html" }
-  let mUrl = url ++ "campaigns/send-test.json"
+  let mUrl = url ++ "/campaigns/send-test.json"
   processResponse mUrl mail
   writeLog INFO "sendEmail" (mUrl ++ "," ++ show mail) "OK"
 
@@ -161,6 +180,7 @@ processResponse url jsonData = do
                                         getResponse s h c
                                         writeLog ERROR "MailchimpSimple" (url ++ "," ++ show jsonData) "Exit"
                                         exitWith (ExitFailure 0))  
+  writeLog INFO "processResponse" (url ++ "," ++ show jsonData) "OK"
   
 -- | Construct the erroneous HTTP responses when an exception occurs
 getResponse s h c = do
@@ -179,7 +199,9 @@ getResponse s h c = do
   
 -- | Construct the end-point URL
 endPointUrl :: IO String
-endPointUrl = return ("https://" ++ (last (splitString '-' _API_KEY)) ++ ".api.mailchimp.com/2.0/")
+endPointUrl = do
+  apikey <- getConfig "web.config" "api_key"
+  return ("https://" ++ (last (splitString '-' apikey)) ++ ".api.mailchimp.com/2.0")
 
 -- | Utility function to split strings  
 splitString :: Char -> String -> [String]
