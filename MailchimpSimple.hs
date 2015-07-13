@@ -192,10 +192,10 @@ getResponse s h c = do
   let req = initReq { method = methodPost }
   response <- withManager $ httpLbs req
   let errorRes = response { responseStatus = s
-                     , responseVersion     = http11
-                     , responseBody        = ""
-                     , responseHeaders     = h
-                     , responseCookieJar   = c }
+                          , responseVersion     = http11
+                          , responseBody        = ""
+                          , responseHeaders     = h
+                          , responseCookieJar   = c }
   writeLog INFO "getResponse" (show errorRes) "OK"
   return errorRes
   

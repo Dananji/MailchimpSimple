@@ -10,3 +10,12 @@ This currently implements couple of methods in the 'lists' section, they are;
 	Past activities performed on a mailing list
 
 I hope to develop this further to support Mailchimp version 3.0 as well. 
+
+# How to use
+
+Given that you have installed Haskell platform in your machine; 
+(If not, follow this link: https://www.haskell.org/platform/windows.html)
+
+1. Clone the Git repository using 'git clone https://github.com/Dananji/MailchimpSimple.git'
+2. Open the terminal, and browse into the cloned project folder
+3. Then type 'cabal install' in the terminal
