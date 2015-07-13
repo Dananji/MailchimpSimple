@@ -2,7 +2,6 @@ Name:		    MailchimpSimple
 Version:	    1.0
 Cabal-Version:  >= 1.2
 License:	    BSD3
-License-File:	LICENSE
 Author:		    Dananji Liyanage
 Homepage:	    https://github.com/Dananji/MailchimpSimple
 Synopsis:	    A framework to interact with Mailchimp JSON API
