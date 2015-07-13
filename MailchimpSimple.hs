@@ -19,10 +19,11 @@ import           System.Exit
 import           Data.ConfigFile
 import           Data.Either.Utils
 import           Control.Monad.Error 
+import           System.FilePath.Posix
 
 -- App modules
-import           Types
-import           Logger
+import           MailchimpSimple.Types
+import           MailchimpSimple.Logger
 
 -- | Read the user specified configuration
 getConfig :: FilePath -> OptionSpec -> IO String
@@ -42,9 +43,9 @@ addSubscriber email emailType = do
   url <- endPointUrl
   let subscription = Subscription { s_apikey     = apiKey
                                   , s_id         = listID
-                                  , s_email      = (Email email)
-                                  , s_email_type = emailType
-                                  , s_dou_opt    = True 
+								  , s_email      = (Email email)
+								  , s_email_type = emailType
+								  , s_dou_opt    = True 
                                   , s_up_ex      = True
                                   , s_rep_int    = True
                                   , s_send       = True }
@@ -65,7 +66,8 @@ batchSubscribe fileName = do
                                             , b_batch   = emailArry
                                             , b_dou_opt = True
                                             , b_up_ex   = True
-                                            , b_rep_int = True }
+                                            , b_rep_int = True
+                                            }
   let bUrl = url ++ "/lists/batch-subscribe.json"
   processResponse bUrl batchSubscription
   writeLog INFO "batchSubscribe" (bUrl ++ "," ++ show batchSubscription) "OK"
@@ -210,8 +212,11 @@ splitString d s = x : splitString d (drop 1 y) where (x,y) = span (/= d) s
  
 -- | Utility function to read external files
 readInputFile :: FilePath -> IO String 
-readInputFile fileName = catch (readFile fileName)
-                        (\e -> do let ex = show (e :: IOException)
-                                  writeLog ERROR "readInputFile" fileName ("IOException= " ++ ex) 
-                                  writeLog ERROR "MailchimpSimple" fileName "Exit"
-                                  exitWith (ExitFailure 0))
+readInputFile fileName = do
+  filePath <- getConfig "web.config" "file_path"
+  let file = filePath ++ [pathSeparator] ++ fileName
+  catch (readFile fileName)
+    (\e -> do let ex = show (e :: IOException)
+              writeLog ERROR "readInputFile" fileName ("IOException= " ++ ex) 
+              writeLog ERROR "MailchimpSimple" fileName "Exit"
+              exitWith (ExitFailure 0))
