@@ -21,8 +21,8 @@ import           System.Exit
 import           Types
 import           Logger
 
-_API_KEY = "0203e88d8616efc6715992e57e29f3db-us11"
-_LIST_ID = "e24d54d984"
+_API_KEY = "sample_apikey"
+_LIST_ID = "sample_list_id"
 
 -- | Add a new subscriber
 addSubscriber email emailType = do
@@ -30,9 +30,9 @@ addSubscriber email emailType = do
   url <- endPointUrl
   let subscription = Subscription { s_apikey     = _API_KEY
                                   , s_id         = _LIST_ID
-								  , s_email      = (Email email)
-								  , s_email_type = emailType
-								  , s_dou_opt    = True 
+                                  , s_email      = (Email email)
+                                  , s_email_type = emailType
+                                  , s_dou_opt    = True 
                                   , s_up_ex      = True
                                   , s_rep_int    = True
                                   , s_send       = True }
