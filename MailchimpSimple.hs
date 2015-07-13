@@ -43,9 +43,9 @@ addSubscriber email emailType = do
   url <- endPointUrl
   let subscription = Subscription { s_apikey     = apiKey
                                   , s_id         = listID
-								  , s_email      = (Email email)
-								  , s_email_type = emailType
-								  , s_dou_opt    = True 
+                                  , s_email      = (Email email)
+                                  , s_email_type = emailType
+                                  , s_dou_opt    = True 
                                   , s_up_ex      = True
                                   , s_rep_int    = True
                                   , s_send       = True }
