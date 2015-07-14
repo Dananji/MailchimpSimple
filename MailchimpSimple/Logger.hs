@@ -4,6 +4,8 @@ module MailchimpSimple.Logger ( LogLevels(..)
                               , writeLog ) where
 
 import           Data.Time
+import           System.FilePath.Posix
+import           System.Directory ( doesDirectoryExist , createDirectory )
 
 -- | Constructor for the Log levels 
 data LogLevels = ERROR | DEBUG | INFO deriving (Show, Eq)
@@ -32,6 +34,8 @@ writeLog :: LogLevels -> String -> String -> String -> IO ()
 writeLog lLevel lMethod lInputData lMessage = do
   logEntry <- toString (LogEntry lLevel lMethod lInputData lMessage)
   let logEntryProcessed = logEntry ++ "\n"
+  exists <- doesDirectoryExist "log"
+  if (exists == True) then return () else (createDirectory "log")
   if lLevel == ERROR 
-    then appendFile "error.log" logEntryProcessed
-	else appendFile "access.log" logEntryProcessed
+    then appendFile ("log" ++ [pathSeparator] ++ "error.log") logEntryProcessed
+	else appendFile ("log" ++ [pathSeparator] ++ "access.log") logEntryProcessed
