@@ -9,16 +9,17 @@ Category:       Web
 Build-Type:     Simple
 
 Library
-  Build-Depends:	 base                   >= 2 && <= 5
+  Build-Depends:	 base                   >= 2 && < 5
                    , http-conduit           >= 2.1
                    , http-types             >= 0.3
                    , transformers           >= 0.2
                    , aeson                  >= 0.6
                    , ConfigFile             >= 1.0
                    , MissingH               >= 1.0 
-                   , mtl                    >= 2.0 && <= 3.0
+                   , mtl                    >= 2.0 && < 3.0
                    , time                   >= 1.4
-                   , filepath               >= 1.2 && <= 2.0
+                   , filepath               >= 1.2 && < 2.0
+                   , directory              >= 0.1 && < 2.0 
   Exposed-modules:
     MailchimpSimple.Types, MailchimpSimple.Logger
   Extensions:	OverloadedStrings,
