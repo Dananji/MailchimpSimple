@@ -18,4 +18,5 @@ Given that you have installed Haskell platform in your machine;
 
 1. Clone the Git repository using 'git clone https://github.com/Dananji/MailchimpSimple.git'
 2. Open the terminal, and browse into the cloned project folder
+4. Run 'cabal update' 
 3. Then type 'cabal install' in the terminal
