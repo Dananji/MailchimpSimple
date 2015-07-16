@@ -40,7 +40,6 @@ addSubscriber
         -> String
         -> IO (Either String SubscriptionResponse, Response BL.ByteString)
 addSubscriber email emailType = do
-  writeLog INFO "addSubscriber" (email ++ "," ++ emailType) "Entry"
   apiKey <- getConfig _CONFIG_FILE "api_key"
   listID <- getConfig _CONFIG_FILE "list_id"
   url <- endPointUrl
@@ -64,7 +63,6 @@ batchSubscribe
 batchSubscribe emails = do
   apiKey <- getConfig _CONFIG_FILE "api_key"
   listID <- getConfig _CONFIG_FILE "list_id"
-  writeLog INFO "batchSubscribe" (show emails) "Entry"
   url <- endPointUrl
   let emailArry = [ Batch { b_email = (Email x), b_email_type = "html"} | x <- emails]
   let batchSubscription = BatchSubscription { b_apikey  = apiKey
@@ -88,7 +86,6 @@ batchSubscribe emails = do
 listMailingLists :: IO [MailListResponse]
 listMailingLists = do
   apiKey <- getConfig _CONFIG_FILE "api_key"
-  writeLog INFO "listMailingLists" apiKey "Entry"
   url <- endPointUrl
   let mList =   MailList { l_apikey     = apiKey
                          , l_filters    = Filters { list_id   = ""
@@ -99,7 +96,8 @@ listMailingLists = do
 	                     , l_sort_dir   = "DESC" }
   let lUrl = url ++ "/lists/list.json"
   vArray <- constructJSONResponse lUrl mList
-  return (getValues vArray)
+  let listResponse = getValues vArray
+  return listResponse
   where getValues ls
           | ls /= (Just V.empty) = constructMLRes (fmap V.head ls) : getValues (fmap V.tail ls)
           | otherwise = []
@@ -112,14 +110,14 @@ listSubscribers :: IO [SubscribersResponse]
 listSubscribers = do
   apiKey <- getConfig _CONFIG_FILE "api_key"
   listID <- getConfig _CONFIG_FILE "list_id"
-  writeLog INFO "listSubscribers" (apiKey ++ "," ++ listID) "Entry"
   url <- endPointUrl
   let sList = Subscribers { su_apikey = apiKey
                           , su_id     = listID
                           , su_status = "subscribed" }
   let lUrl = url ++ "/lists/members.json"
   vArray <- constructJSONResponse lUrl sList
-  return (getValues vArray) 
+  let listSubResponse = getValues vArray
+  return listSubResponse
   where getValues ls
           | ls /= (Just V.empty) = constructMLRes (fmap V.head ls) : getValues (fmap V.tail ls)
           | otherwise = []
@@ -138,7 +136,6 @@ constructJSONResponse url jsonData = do
 getActivity = do
   apiKey <- getConfig _CONFIG_FILE "api_key"
   listID <- getConfig _CONFIG_FILE "list_id"
-  writeLog INFO "getActivity" (apiKey ++ "," ++ listID) "Entry"
   url <- endPointUrl
   let activity = Activity { a_apikey = apiKey
                           , a_id     = listID }
@@ -148,7 +145,6 @@ getActivity = do
 -- | Get the created campaigns
 getCampaigns :: FilePath -> IO [Campaign]
 getCampaigns fileName = do
-  writeLog INFO "getCampaigns" fileName "Entry"
   list <- readCampaings fileName
   let trans = transpose list
   let h = head trans 
@@ -159,11 +155,9 @@ getCampaigns fileName = do
 -- | Read the CSV file exported from the Campaigns in Mailchimp web interface
 readCampaings :: FilePath -> IO [[String]]
 readCampaings fileName = do
-  writeLog INFO "readCampaings" fileName "Entry"
   input <- readInputFile fileName
   let values = tail $ lines input
   let finalVal = getValues $ processValues values
-  writeLog INFO "readCampaings" (show finalVal) "OK"
   return finalVal
   where processValues [] = [] 
         processValues (x:xs) = (splitString ',' x) : processValues xs
@@ -173,7 +167,6 @@ readCampaings fileName = do
         
 -- | Send an already existing campaign to a list of subscribers 
 sendEmail fileName cid = do
-  writeLog INFO "sendEmail" (fileName ++ "," ++ cid) "Entry"
   apiKey <- getConfig _CONFIG_FILE "api_key"
   url <- endPointUrl
   emails <- getSubscribers fileName
@@ -187,31 +180,25 @@ sendEmail fileName cid = do
 -- | Read the CSV file exported from the Lists in Mailchimp web interface  
 getSubscribers :: FilePath -> IO [String]
 getSubscribers fileName = do
-  writeLog INFO "getSubscribers" fileName "Entry"
   input <- readInputFile fileName
   let values = tail $ lines input
   let processed = concat $ processValues values
-  writeLog INFO "getSubscribers" (show processed) "OK"
   return processed
   where processValues [] = [] 
         processValues (x:xs) = (take 1 (splitString ',' x)) : processValues xs
         
 -- | Build the response from URL and JSON data        
 processResponse url jsonData = do
-  writeLog INFO "processResponse" (url ++ "," ++ show jsonData) "Entry"
   initReq <- liftIO $ parseUrl url
   let req = initReq { requestBody = RequestBodyLBS $ encode jsonData
                     , method = methodPost }
   catch (withManager $ httpLbs req)
     (\(StatusCodeException s h c) -> do let ex = (show s ++ "," ++ show h ++ "," ++ show c)
-                                        writeLog ERROR "processResponse" (url ++ "," ++ show jsonData) ("HttpException= " ++ ex)
                                         getResponse s h c
-                                        writeLog ERROR "MailchimpSimple" (url ++ "," ++ show jsonData) "Exit"
                                         exitWith (ExitFailure 0))  
   
 -- | Construct the erroneous HTTP responses when an exception occurs
 getResponse s h c = do
-  writeLog INFO "getResponse" (show s ++ "," ++ show h ++ "," ++ show c) "Entry"
   url <- endPointUrl
   initReq <- parseUrl url
   let req = initReq { method = methodPost }
@@ -221,7 +208,6 @@ getResponse s h c = do
                           , responseBody        = ""
                           , responseHeaders     = h
                           , responseCookieJar   = c }
-  writeLog INFO "getResponse" (show errorRes) "OK"
   return errorRes
   
 -- | Read the user specified configuration
@@ -252,6 +238,4 @@ readInputFile fileName = do
   let file = filePath ++ [pathSeparator] ++ fileName
   catch (readFile fileName)
     (\e -> do let ex = show (e :: IOException)
-              writeLog ERROR "readInputFile" fileName ("IOException= " ++ ex) 
-              writeLog ERROR "MailchimpSimple" fileName "Exit"
               exitWith (ExitFailure 0))
