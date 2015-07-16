@@ -9,7 +9,11 @@ module MailchimpSimple.Types ( Subscription(..)
                              , BatchSubscription(..)
                              , Batch(..)
                              , Campaign(..)
-                             , SendMail(..) ) where
+                             , SendMail(..) 
+                             , SubscriptionResponse(..) 
+                             , MailListResponse(..) 
+                             , SubscribersResponse(..) 
+                             , BatchSubscriptionResponse(..) ) where
 
 import           Data.Aeson
 import           GHC.Generics hiding ( head )
@@ -160,95 +164,48 @@ instance ToJSON SendMail where
                                                                       , "cid"         .= m_cid
                                                                       , "test_emails" .= m_test_emails
                                                                       , "send_type"   .= m_send_type ]
-                                                                              
+                                                                      
+---------------------------------------------------- Responses --------------------------------------------------------
 
-           
--- data CampaignResponse =
-  -- CampaignResponse { total :: Int
-                   -- , c_data :: [CData]
-                   -- , c_errors :: [CErrors]
-                   -- } deriving (Show, Generic)
+data SubscriptionResponse =
+  SubscriptionResponse { sr_email :: String
+                       , sr_euid :: String
+                       , sr_leid :: String 
+                       } deriving (Show)
+                       
+instance FromJSON SubscriptionResponse where
+  parseJSON (Object v) = do
+    srEmail <- v .: "email"
+    srEuid <- v .: "euid"
+    srLeid <- v .: "leid"
+    return $ SubscriptionResponse srEmail srEuid srLeid
+  parseJSON _ = mzero
+instance ToJSON SubscriptionResponse where
+  toJSON (SubscriptionResponse sr_email sr_euid sr_leid) = object [ "email" .= sr_email
+                                                                  , "euid"  .= sr_euid
+                                                                  , "leid"  .= sr_leid ]
+                                                                  
+data MailListResponse =
+  MailListResponse { l_name :: Maybe String
+                   , l_id :: Maybe String 
+                   } deriving (Show, Generic)
                    
--- instance FromJSON CampaignResponse where
-  -- parseJSON (Object v) = do
-    -- cTotal  <- v .: "total"
-    -- cData   <- v .: "data"
-    -- cErrors <- v .: "errors"
-    -- return $ CampaignResponse cTotal cData cErrors
-  -- parseJSON _ = mzero
-  
--- instance ToJSON CampaignResponse where
-  -- toJSON (CampaignResponse total, c_data, c_errors) = object [ "total"  .= total
-                                                             -- , "data"   .= c_data
-                                                             -- , "errors" .= c_errors ]
-                                                             
--- data CData =
-  -- CData { c_id :: String
-        -- , c_web_id :: Int
-        -- , c_list_id :: String
-        -- , c_folder_id :: String
-        -- , c_template_id :: String
-        -- , c_content_type :: String
-        -- , c_title :: String
-        -- , c_type :: String
-        -- , c_create_time :: String
-        -- , c_send_time :: String
-        -- , c_emails_sent :: Int
-        -- , c_status :: String
-        -- , c_from_name :: String
-        -- , c_from_email :: String
-        -- , c_subject :: String
-        -- , c_to_name :: String
-        -- , c_archive_url :: String
-        -- , c_inline_css :: Bool
-        -- , c_analytics :: String
-        -- , c_analytics_tag :: String
-        -- , c_authenticate :: Bool
-        -- , c_ecomm360 :: Bool
-        -- , c_auto_tweet :: Bool
-        -- , c_auto_fb_post :: String
-        -- , c_auto_footer :: Bool
-        -- , c_timewrap :: Bool
-        -- , c_timewrap_schedule :: String
-        -- , c_parent_id :: String
-        -- , c_is_child :: Bool
-        -- , c_tests_sent :: String
-        -- , c_tests_remain :: Int
-        -- , c_tracking :: Tracking
-        -- , c_segment_text :: String
-        -- , c_segment_opts :: [SegmentOpts]
-        -- , c_saved_segment :: SavedSegment
-        -- , }
-        
--- data SegmentOpts =
-  -- SegmentOpts { match :: String
-              -- , conditions :: [Conditions] 
-              -- } deriving (Show, Generic)
-              
--- instance FromJSON SegmentOpts where
-  -- parseJSON (Object v) = do
-    -- sMatch      <- v .: "match"
-    -- sConditions <- v .: "conditions"
-    -- return $ SegmentOpts sMatch sConditions
-  -- parseJSON _ = mzero
--- instance ToJSON SegmentOpts where
-  -- toJSON (SegmentOpts match conditions) = object [ "match"      .= match
-                                                 -- , "conditions" .= conditions]
+instance FromJSON MailListResponse where
+instance ToJSON MailListResponse where
 
--- data Conditions =
-  -- Conditions { field :: String
-             -- , op :: String
-             -- , value :: String
-             -- } deriving (Show, Generic)
-             
--- instance FromJSON Conditions where
-  -- parseJSON (Object v) = do
-    -- cField <- v .: "field"
-    -- cOp    <- v .: "op"
-    -- cValue <- v .: "value"
-    -- return $ Conditions cField cOp cValue
-  -- parseJSON _ = mzero
--- instance ToJSON Conditions where
-  -- toJSON (Conditions field op value) = object [ "field" .= field
-                                              -- , "op"    .= op
-                                              -- , "value" .= value]
+data SubscribersResponse =
+  SubscribersResponse { s_name :: Maybe String
+                      , s_list_name :: Maybe String
+                      , s_emailType :: Maybe String
+                      } deriving (Show, Generic)
+                      
+instance FromJSON SubscribersResponse where
+instance ToJSON SubscribersResponse where
+
+data BatchSubscriptionResponse =
+  BatchSubscriptionResponse { add_count :: Maybe Int
+                            , adds :: [Maybe SubscriptionResponse]
+                            } deriving (Show, Generic)
+                            
+instance FromJSON BatchSubscriptionResponse where
+instance ToJSON BatchSubscriptionResponse where
