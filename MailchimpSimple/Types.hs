@@ -12,7 +12,7 @@ module MailchimpSimple.Types ( Subscription(..)
                              , SendMail(..) 
                              , SubscriptionResponse(..) 
                              , MailListResponse(..) 
-                             , SubscribersResponse(..) 
+                             , ListSubscribersResponse(..) 
                              , BatchSubscriptionResponse(..) ) where
 
 import           Data.Aeson
@@ -115,6 +115,15 @@ data MailList =
 	       } deriving (Show, Generic)
 
 instance FromJSON MailList where
+  parseJSON (Object v) = do
+    lApikey <- v .: "apikey"
+    lFilters <- v .: "filters"
+    lStart <- v .: "start"
+    lLimit <- v .: "limit"
+    lSortField <- v .: "sort_field"
+    lSortDir <- v .: "sort_dir"
+    return $ MailList lApikey lFilters lStart lLimit lSortField lSortDir
+  parseJSON _ = mzero
 instance ToJSON MailList where
   toJSON (MailList l_apikey l_filters l_start l_limit l_sort_field l_sort_dir) = object [ "apikey"     .= l_apikey
                                                                                         , "filters"  .= l_filters
@@ -165,12 +174,174 @@ instance ToJSON SendMail where
                                                                       , "test_emails" .= m_test_emails
                                                                       , "send_type"   .= m_send_type ]
                                                                       
+data MandrillMail =
+  MandrillMail { key :: String
+               , message :: Message
+               , async :: Bool
+               , ip_pool :: String
+               , send_at :: String
+               } deriving (Show, Generic)
+               
+instance FromJSON MandrillMail where
+instance ToJSON MandrillMail where
+
+data Message = 
+  Message { html :: String
+          , text :: String
+          , subject :: String
+          , from_email :: String
+          , from_name :: String
+          , to :: [Emails]
+          , headers :: Headers
+          , important :: Bool
+          , track_opens :: Bool
+          , track_clicks :: Bool
+          , auto_text :: Bool
+          , auto_html :: Bool
+          , inline_css :: Bool
+          , url_strip_qs :: Bool
+          , preserve_recipients :: Bool
+          , view_content_link :: Bool
+          , bcc_address :: String
+          , tracking_domain :: String
+          , signing_domain :: String
+          , return_path_domain :: String
+          , merge :: Bool
+          , merge_language :: String
+          , global_merge_vars :: [GlobalMergeVars]
+          , merge_vars :: [MergeVars]
+          , tags :: [String]
+          , subaccount :: String
+          , google_analytics_domains :: [String]
+          , google_analytics_campaign :: String
+          , metadata :: [RecipientMetadata]
+          , attachment :: [Attachement]
+          , images :: [Image]
+          } deriving (Show, Generic)
+          
+instance FromJSON Message where
+instance ToJSON Message where
+
+data Emails =
+  Emails { e_email :: String
+         , name :: String
+         , email_type :: String
+         } deriving (Show)
+
+instance FromJSON Emails where
+  parseJSON (Object v) = do
+    eEmail <- v .: "email*"
+    name <- v .: "name"
+    email_type <- v .: "type"
+    return $ Emails eEmail name email_type
+  parseJSON _ = mzero
+instance ToJSON Emails where
+  toJSON (Emails eEmail name email_type) = object [ "email*" .= eEmail
+                                                  , "name"   .= name
+                                                  , "type"   .= email_type ]
+                                                 
+data Headers = Headers {} deriving (Show, Generic)
+instance FromJSON Headers where
+instance ToJSON Headers where
+
+data GlobalMergeVars =
+  GlobalMergeVars { g_name :: String
+                  , g_content :: String
+                  } deriving (Show)
+                  
+instance FromJSON GlobalMergeVars where
+  parseJSON (Object v) = do
+    g_name <- v .: "name"
+    g_content <- v .: "content"
+    return $ GlobalMergeVars g_name g_content
+  parseJSON _ = mzero
+instance ToJSON GlobalMergeVars where
+  toJSON (GlobalMergeVars g_name g_content) = object [ "name"    .= g_name
+                                                     , "content" .= g_content]
+
+data MergeVars =
+  MergeVars { m_rcpt :: String
+            , m_vars :: [Vars]
+            } deriving (Show, Generic)
+                             
+instance FromJSON MergeVars where
+  parseJSON (Object v) = do
+    mRcpt <- v .: "rcpt*"
+    mVars <- v .: "vars"
+    return $ MergeVars mRcpt mVars
+instance ToJSON MergeVars where
+  toJSON (MergeVars m_rcpt m_vars) = object [ "rcpt*" .= m_rcpt
+                                            , "vars"  .= m_vars ]
+
+data Vars =
+  Vars { v_name :: String
+       , v_content :: String
+       } deriving (Show)
+
+instance FromJSON Vars where
+  parseJSON (Object v) = do
+    v_name <- v .: "name"
+    v_content <- v .: "content"
+    return $ Vars v_name v_content
+  parseJSON _ = mzero
+instance ToJSON Vars where
+  toJSON (Vars v_name v_content) = object [ "name"    .= v_name
+                                          , "content" .= v_content]
+                                          
+data RecipientMetadata =
+  RecipientMetadata { rcpt :: String
+                    , values :: [Values]
+                    } deriving (Show, Generic)
+                    
+instance FromJSON RecipientMetadata where
+instance ToJSON RecipientMetadata where
+
+data Values = Values {} deriving (Show, Generic)
+instance FromJSON Values where
+instance ToJSON Values where
+
+data Attachement =
+  Attachement { a_type :: String
+              , a_name :: String
+              , a_content :: String
+              } deriving (Show, Generic)
+              
+instance FromJSON Attachement where
+  parseJSON (Object v) = do
+    aType <- v .: "type"
+    aName <- v .: "name"
+    aContent <- v .: "content"
+    return $ Attachement aType aName aContent
+  parseJSON _ = mzero
+instance ToJSON Attachement where
+  toJSON (Attachement a_type a_name a_content) = object [ "type" .= a_type
+                                                        , "name" .= a_name
+                                                        , "content" .= a_content ]
+                                                        
+data Image =
+  Image { i_type :: String
+        , i_name :: String
+        , i_content :: String
+        } deriving (Show, Generic)
+              
+instance FromJSON Image where
+  parseJSON (Object v) = do
+    iType <- v .: "type"
+    iName <- v .: "name"
+    iContent <- v .: "content"
+    return $ Image iType iName iContent
+  parseJSON _ = mzero
+instance ToJSON Image where
+  toJSON (Image i_type i_name i_content) = object [ "type" .= i_type
+                                                  , "name" .= i_name
+                                                  , "content" .= i_content ]
+                                          
 ---------------------------------------------------- Responses --------------------------------------------------------
 
 data SubscriptionResponse =
-  SubscriptionResponse { sr_email :: String
-                       , sr_euid :: String
-                       , sr_leid :: String 
+  SubscriptionResponse { email :: String
+                       , euid :: String
+                       , leid :: String 
                        } deriving (Show)
                        
 instance FromJSON SubscriptionResponse where
@@ -181,30 +352,31 @@ instance FromJSON SubscriptionResponse where
     return $ SubscriptionResponse srEmail srEuid srLeid
   parseJSON _ = mzero
 instance ToJSON SubscriptionResponse where
-  toJSON (SubscriptionResponse sr_email sr_euid sr_leid) = object [ "email" .= sr_email
-                                                                  , "euid"  .= sr_euid
-                                                                  , "leid"  .= sr_leid ]
+  toJSON (SubscriptionResponse email euid leid) = object [ "email" .= email
+                                                         , "euid"  .= euid
+                                                         , "leid"  .= leid ]
                                                                   
 data MailListResponse =
-  MailListResponse { l_name :: Maybe String
-                   , l_id :: Maybe String 
+  MailListResponse { l_name :: String
+                   , l_id :: String 
                    } deriving (Show, Generic)
                    
 instance FromJSON MailListResponse where
 instance ToJSON MailListResponse where
 
-data SubscribersResponse =
-  SubscribersResponse { s_name :: Maybe String
-                      , s_list_name :: Maybe String
-                      , s_emailType :: Maybe String
-                      } deriving (Show, Generic)
+data ListSubscribersResponse =
+  ListSubscribersResponse { s_name :: String
+                          , s_euid :: String
+                          , s_list_name :: String
+                          , s_emailType :: String
+                          } deriving (Show, Generic)
                       
-instance FromJSON SubscribersResponse where
-instance ToJSON SubscribersResponse where
+instance FromJSON ListSubscribersResponse where
+instance ToJSON ListSubscribersResponse where
 
 data BatchSubscriptionResponse =
-  BatchSubscriptionResponse { add_count :: Maybe Int
-                            , adds :: [Maybe SubscriptionResponse]
+  BatchSubscriptionResponse { add_count :: Int
+                            , adds :: [SubscriptionResponse]
                             } deriving (Show, Generic)
                             
 instance FromJSON BatchSubscriptionResponse where
