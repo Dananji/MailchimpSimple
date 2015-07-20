@@ -25,7 +25,7 @@ import qualified Data.Vector as V ( head, tail, empty )
 
 -- App modules
 import           MailchimpSimple.Types
-import           MailchimpSimple.Logger
+-- import           MailchimpSimple.Logger
 
 _API_KEY = "sample_apikey"
 _LIST_ID = "sample_listid"
@@ -38,7 +38,6 @@ addSubscriber
         -> String
         -> IO (Either String SubscriptionResponse, Response BL.ByteString)
 addSubscriber apiKey listID email emailType = do
-  writeLog INFO "addSubscriber" (email ++ "," ++ emailType ++ "," ++ listID) "Entry"
   url <- endPointUrl apiKey
   let subscription = Subscription { s_apikey     = apiKey
                                   , s_id         = listID
@@ -51,7 +50,6 @@ addSubscriber apiKey listID email emailType = do
   let sUrl    = url ++ "/lists/subscribe.json"
   response    <- processResponse sUrl subscription apiKey
   let resBody = eitherDecode (responseBody response) :: Either String SubscriptionResponse
-  writeLog INFO "addSubscriber" (sUrl ++ "," ++ show subscription) (show resBody)
   return (resBody, response)
   
 -- | Add a batch of subscribers
@@ -61,7 +59,6 @@ batchSubscribe
         -> [String]
         -> IO (BatchSubscriptionResponse, Response BL.ByteString)
 batchSubscribe apiKey listID emails = do
-  writeLog INFO "batchSubscribe" (apiKey ++ "," ++ listID ++ "," ++ show emails) "Entry"
   url <- endPointUrl apiKey
   let emailArry = [ Batch { b_email = (Email x), b_email_type = "html"} | x <- emails]
   let batchSubscription = BatchSubscription { b_apikey  = apiKey
@@ -75,7 +72,6 @@ batchSubscribe apiKey listID emails = do
   let resBody       = decode (responseBody response) :: Maybe Value
   let batchResponse = BatchSubscriptionResponse { add_count = fromJust (resBody ^. key (T.pack "add_count") :: Maybe Int)
                                                 , adds      = getValues (resBody ^. key (T.pack "adds") :: Maybe Array) }
-  writeLog INFO "batchSubscribe" (bUrl ++ "," ++ show batchSubscription) (show batchResponse)
   return (batchResponse, response)
   where getValues ls
           | ls /= (Just V.empty) = constructBSRes (fmap V.head ls) : getValues (fmap V.tail ls)
@@ -87,7 +83,6 @@ listMailingLists
     :: String 
         -> IO ([MailListResponse], Response BL.ByteString)
 listMailingLists apiKey = do
-  writeLog INFO "listMailingLists" apiKey "Entry"
   url <- endPointUrl apiKey
   let mList =   MailList { l_apikey     = apiKey
                          , l_filters    = Filters { list_id   = ""
@@ -101,7 +96,6 @@ listMailingLists apiKey = do
   let resBody      = decode (responseBody response) :: Maybe Value 
   let vArray       = resBody ^. key (T.pack "data") :: Maybe Array
   let listResponse = getValues vArray
-  writeLog INFO "listMailingLists" (lUrl ++ "," ++ show mList) (show listResponse)
   return (listResponse, response)
   where getValues ls
           | ls /= (Just V.empty) = constructMLRes (fmap V.head ls) : getValues (fmap V.tail ls)
@@ -116,7 +110,6 @@ listSubscribers
         -> String
         -> IO ([ListSubscribersResponse], Response BL.ByteString)
 listSubscribers apiKey listID = do
-  writeLog INFO "listSubscribers" (apiKey ++ "," ++ listID) "Entry"
   url <- endPointUrl apiKey
   let sList = Subscribers { su_apikey = apiKey
                           , su_id     = listID
@@ -126,7 +119,6 @@ listSubscribers apiKey listID = do
   let resBody = decode (responseBody response) :: Maybe Value 
   let vArray = resBody ^. key (T.pack "data") :: Maybe Array
   let listSubResponse = getValues vArray
-  writeLog INFO "listSubscribers" (lUrl ++ "," ++ show sList) (show listSubResponse)
   return (listSubResponse, response)
   where getValues ls
           | ls /= (Just V.empty) = constructMLRes (fmap V.head ls) : getValues (fmap V.tail ls)
@@ -144,20 +136,16 @@ listSubscribers apiKey listID = do
 
 -- | Build the response from URL and JSON data 
 processResponse url jsonData apiKey = do
-  writeLog INFO "processResponse" (url ++ "," ++ show jsonData) "Entry"
   initReq <- liftIO $ parseUrl url
   let req = initReq { requestBody = RequestBodyLBS $ encode jsonData
                     , method      = methodPost }
   catch (withManager $ httpLbs req)
     (\(StatusCodeException s h c) -> do let ex = (show s ++ "," ++ show h ++ "," ++ show c)
-                                        writeLog ERROR "processResponse" (url ++ "," ++ show jsonData) ("HttpException= " ++ ex)
                                         getResponse s h c apiKey
-                                        writeLog ERROR "MailchimpSimple" (url ++ "," ++ show jsonData) "Exit"
                                         exitWith (ExitFailure 0))  
   
 -- | Construct the erroneous HTTP responses when an exception occurs
 getResponse s h c apiKey = do
-  writeLog INFO "getResponse" (show s ++ "," ++ show h ++ "," ++ show c) "Entry"
   url      <- endPointUrl apiKey
   initReq  <- parseUrl url
   let req  = initReq { method = methodPost }
@@ -167,7 +155,6 @@ getResponse s h c apiKey = do
                           , responseBody        = ""
                           , responseHeaders     = h
                           , responseCookieJar   = c }
-  writeLog INFO "getResponse" (show errorRes) "OK"
   return errorRes
 
 -- | Construct the end-point URL
