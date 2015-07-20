@@ -25,7 +25,7 @@ import qualified Data.Vector as V ( head, tail, empty )
 
 -- App modules
 import           MailchimpSimple.Types
--- import           MailchimpSimple.Logger
+import           MailchimpSimple.Logger
 
 _API_KEY = "sample_apikey"
 _LIST_ID = "sample_listid"
