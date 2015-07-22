@@ -26,6 +26,7 @@ import           Control.Lens.Getter ( (^.))
 import qualified Data.Text as T ( pack )
 import qualified Data.Vector as V ( head, tail, empty )
 
+
 -- App modules
 import           MailchimpSimple.Types
 
@@ -45,14 +46,14 @@ listMailingLists apiKey = do
   let lUrl         = url ++ "/lists/list.json"
   response         <- processResponse lUrl mList apiKey
   let resBody      = decode (responseBody response) :: Maybe Value 
-  let vArray       = resBody ^. key (T.pack "data") :: Maybe Array
+  let vArray       = resBody ^. key "data" :: Maybe Array
   let listResponse = getValues vArray
   return listResponse
   where getValues ls
           | ls /= (Just V.empty) = constructMLRes (fmap V.head ls) : getValues (fmap V.tail ls)
           | otherwise            = []
-        constructMLRes elem = do let lName = elem ^. key (T.pack "name") :: Maybe String
-                                 let lID   = elem ^. key (T.pack "id") :: Maybe String
+        constructMLRes elem = do let lName = elem ^. key "name" :: Maybe String
+                                 let lID   = elem ^. key "id" :: Maybe String
                                  MailListResponse { l_name = lName, l_id = lID}
   
 
@@ -69,7 +70,7 @@ listSubscribers apiKey listID = do
   let lUrl = url ++ "/lists/members.json"
   response <- processResponse lUrl sList apiKey
   let resBody = decode (responseBody response) :: Maybe Value 
-  let vArray = resBody ^. key (T.pack "data") :: Maybe Array
+  let vArray = resBody ^. key "data" :: Maybe Array
   let listSubResponse = getValues vArray
   return listSubResponse
   where getValues ls
@@ -79,10 +80,10 @@ listSubscribers apiKey listID = do
                                                           , s_euid = sEuid
                                                           , s_list_name = sListName
                                                           , s_emailType = sEmailType })
-                              where sName      = elem ^. key (T.pack "email") :: Maybe String
-                                    sEuid      = elem ^. key (T.pack "euid") :: Maybe String
-                                    sListName  = elem ^. key (T.pack "list_name") :: Maybe String
-                                    sEmailType = elem ^. key (T.pack "email_type") :: Maybe String
+                              where sName      = elem ^. key "email" :: Maybe String
+                                    sEuid      = elem ^. key "euid" :: Maybe String
+                                    sListName  = elem ^. key "list_name" :: Maybe String
+                                    sEmailType = elem ^. key "email_type" :: Maybe String
                                  
 
 getTemplates
@@ -97,15 +98,15 @@ getTemplates apiKey = do
   let tUrl         = url ++ "/templates/list.json"
   response         <- processResponse tUrl templates apiKey
   let resBody      = decode (responseBody response) :: Maybe Value
-  let galleryT     = resBody ^. key (T.pack "gallery") :: Maybe Array
-  let userT        = resBody ^. key (T.pack "user") :: Maybe Array
+  let galleryT     = resBody ^. key "gallery" :: Maybe Array
+  let userT        = resBody ^. key "user" :: Maybe Array
   let allTemplates = (getValues galleryT) ++ (getValues userT)
   return allTemplates
   where getValues ls
             | ls /= (Just V.empty) = constructTRes (fmap V.head ls) : getValues (fmap V.tail ls)
             | otherwise = []
-        constructTRes elem = do let tName = elem ^. key (T.pack "name") :: Maybe String
-                                let tID   = elem ^. key (T.pack "id") :: Maybe Int
+        constructTRes elem = do let tName = elem ^. key "name" :: Maybe String
+                                let tID   = elem ^. key "id" :: Maybe Int
                                 TemplateResponse { t_name = tName, t_id = tID }
                                 
 -- | Create a new campaign and save it 
@@ -140,7 +141,7 @@ createCampaign apiKey
   let eUrl    = url ++ "/campaigns/create.json"
   response    <- processResponse eUrl campaign apiKey
   let resBody = decode (responseBody response) :: Maybe Value
-  let cid     = resBody ^. key (T.pack "id") :: Maybe String
+  let cid     = resBody ^. key "id" :: Maybe String
   return cid
 
 -- | Send an email campaign
@@ -197,8 +198,8 @@ batchSubscribe apiKey listID emails = do
   let bUrl          = url ++ "/lists/batch-subscribe.json"
   response          <- processResponse bUrl batchSubscription apiKey
   let resBody       = decode (responseBody response) :: Maybe Value
-  let batchResponse = BatchSubscriptionResponse { add_count = resBody ^. key (T.pack "add_count") :: Maybe Int
-                                                , adds      = getValues (resBody ^. key (T.pack "adds") :: Maybe Array) }
+  let batchResponse = BatchSubscriptionResponse { add_count = resBody ^. key "add_count" :: Maybe Int
+                                                , adds      = getValues (resBody ^. key "adds" :: Maybe Array) }
   return batchResponse
   where getValues ls
           | ls /= (Just V.empty) = constructBSRes (fmap V.head ls) : getValues (fmap V.tail ls)
