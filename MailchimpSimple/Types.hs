@@ -258,26 +258,26 @@ instance ToJSON SubscriptionResponse where
                                                          , "leid"  .= leid ]
                                                                   
 data MailListResponse =
-  MailListResponse { l_name :: String
-                   , l_id :: String 
+  MailListResponse { l_name :: Maybe String
+                   , l_id :: Maybe String 
                    } deriving (Show, Generic)
                    
 instance FromJSON MailListResponse where
 instance ToJSON MailListResponse where
 
 data ListSubscribersResponse =
-  ListSubscribersResponse { s_name :: String
-                          , s_euid :: String
-                          , s_list_name :: String
-                          , s_emailType :: String
+  ListSubscribersResponse { s_name :: Maybe String
+                          , s_euid :: Maybe String
+                          , s_list_name :: Maybe String
+                          , s_emailType :: Maybe String
                           } deriving (Show, Generic)
                       
 instance FromJSON ListSubscribersResponse where
 instance ToJSON ListSubscribersResponse where
 
 data BatchSubscriptionResponse =
-  BatchSubscriptionResponse { add_count :: Int
-                            , adds :: [SubscriptionResponse]
+  BatchSubscriptionResponse { add_count :: Maybe Int
+                            , adds :: [Maybe SubscriptionResponse]
                             } deriving (Show, Generic)
                             
 instance FromJSON BatchSubscriptionResponse where
@@ -290,8 +290,8 @@ instance FromJSON SendMailResponse where
 instance ToJSON SendMailResponse where
 
 data TemplateResponse =
-  TemplateResponse { t_name :: String
-                   , t_id :: Int 
+  TemplateResponse { t_name :: Maybe String
+                   , t_id :: Maybe Int 
                    } deriving (Show, Generic)
                    
 instance FromJSON TemplateResponse where
