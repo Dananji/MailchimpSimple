@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module MailchimpSimple.Logger ( LogLevels(..)
-                              , writeLog ) where
+module Utils.Logger ( LogLevels(..)
+                    , writeLog ) where
 
 import           Data.Time
 import           System.FilePath.Posix
@@ -38,4 +38,4 @@ writeLog lLevel lMethod lInputData lMessage = do
   if (exists == True) then return () else (createDirectory "log")
   if lLevel == ERROR 
     then appendFile ("log" ++ [pathSeparator] ++ "error.log") logEntryProcessed
-	else appendFile ("log" ++ [pathSeparator] ++ "access.log") logEntryProcessed
+    else appendFile ("log" ++ [pathSeparator] ++ "access.log") logEntryProcessed

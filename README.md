@@ -1,16 +1,19 @@
 # MailchimpSimple
 A library to handle mailing lists in Mailchimp (http://mailchimp.com/)
 
-# Introduction
-This library is written in Haskell, to interact with Mailchimp's JSON API. The initial commit supports only the Mailchimp 2.0 version.
-This currently implements couple of methods in the 'lists' section, they are;
+# Features
+This library is written in Haskell, to interact with Mailchimp's JSON API. The initial commit supported only the Mailchimp 2.0 version. Now the library is available for version 3.0 using Basic HTTP Authentication.
+This implements the following functionalities;
 
-- Adding subscribers
-- List out the subscribers in a mailing list
+- Adding individual subscribers and in batches
 - List the mailing lists for given 'apikey'
-- Past activities performed on a mailing list
+- List out the subscribers in a mailing list
+- List the templates and campaigns in an account
+- Create a new campaign
+- Send a campaign (for this the campaign should be properly formatted using the web interface)
+- Add subscribers in batches and individually and remove individual subscribers from a given list
 
-I hope to develop this further to support Mailchimp version 3.0 as well. Here is the link for the blog post written on this [http://dananjiliyanage.blogspot.com/2015/07/develop-mailchimp-library-with-haskell.html]
+Here is the link for the blog post written on this [http://dananjiliyanage.blogspot.com/2015/07/develop-mailchimp-library-with-haskell.html]
 
 # How to use
 
