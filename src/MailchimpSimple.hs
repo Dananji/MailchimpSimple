@@ -14,7 +14,6 @@ module MailchimpSimple
 import           Network.HTTP.Conduit
 import           Network.HTTP.Types ( methodPost, methodGet, methodDelete, Status(..), http11, ResponseHeaders, hContentType )
 import           Control.Monad.IO.Class ( liftIO )
-import           Network.HTTP.Client.Auth
 
 import           Safe
 import           Control.Exception ( catch, IOException, Exception )
