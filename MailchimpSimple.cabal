@@ -12,9 +12,8 @@ Build-type:          Simple
 Extra-source-files:  README.md
 Cabal-version:       >=1.10
 
-executable mailchimp
-  main-is:             Main.hs
-  -- exposed-modules:     MailchimpSimple, Utils.Types, Utils.Logger
+library
+  exposed-modules:     MailchimpSimple, Utils.Types, Utils.Logger
   -- other-modules:       
   other-extensions:    OverloadedStrings, DeriveGeneric
   build-depends:       base >=4.8 && <4.9
